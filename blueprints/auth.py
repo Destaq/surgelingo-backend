@@ -1,4 +1,3 @@
-from typing import Optional
 from flask import Blueprint, request, jsonify
 from extensions import db
 from models.user import User
@@ -59,8 +58,9 @@ def logout():
     """
     Logout user
     """
-    unset_jwt_cookies()
-    return jsonify({"message": "Logged out"}), 200
+    response = jsonify(message="Logged out")
+    unset_jwt_cookies(response)
+    return response, 200
 
 
 @auth_bp.route("/user", methods=["GET"])

@@ -15,6 +15,7 @@ from flask_jwt_extended import (
 
 # import blueprints
 from blueprints.auth import auth_bp
+from blueprints.surges import surges_bp
 
 # other imports for flask-migrate
 from models.post import Post
@@ -70,4 +71,5 @@ def create_app():
         
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(surges_bp, url_prefix="/api/surges")
     return app

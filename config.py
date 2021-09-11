@@ -1,6 +1,5 @@
 import os
-from datetime import datetime, timedelta, timezone
-
+from datetime import timedelta
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -14,6 +13,7 @@ class Config(object):
     JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
     JWT_COOKIE_SECURE = False
     JWT_COOKIE_CSRF_PROTECT = False  # True in production, only due to Nuxt-auth calamity
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
 
 class ProductionConfig(Config):
