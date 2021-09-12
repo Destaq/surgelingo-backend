@@ -119,7 +119,6 @@ def search_surges():
     tag = request.args.get("tag")
     contents = request.args.get("contents")
     query_config = []
-    query_config.append(language_code == language_code)
 
     if request.args.get("alreadyShown"):
         exclude_links = request.args.get("alreadyShown").split(",")
@@ -134,7 +133,7 @@ def search_surges():
         query_config.append(Post.content.contains(contents))
 
 
-    results = Post.query.filter(Post.route_link.notin_(exclude_links)).filter(*query_config).limit(10).all()
+    results = Post.query.filter(Post.route_link.notin_(exclude_links)).filter_by(language_code=language_code).filter(*query_config).limit(10).all()
     results = [convert_post_to_dict(result) for result in results]
 
     if current_user:
@@ -143,8 +142,9 @@ def search_surges():
         user_known_stems = []
 
     for item in results:
-        item["author"] = User.query.filter_by(id=item["author_id"]).first().username
+        resulted_user = User.query.filter_by(id=item["author_id"]).first()
         known_or_not = []
+        item["author"] = resulted_user.username
 
         # highlightable
         if current_user:
