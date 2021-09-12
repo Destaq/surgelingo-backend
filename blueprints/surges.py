@@ -48,11 +48,23 @@ def get_surge():
     surge_id = request.args.get("id")
 
     surge = Post.query.filter_by(route_link=surge_id).first()
-    return jsonify(surge=convert_post_to_dict(surge))
+    return jsonify(surge=convert_post_to_dict(surge), author=User.query.filter_by(id=surge.author_id).first().username)
 
 
-# just used for debugging
-@surges_bp.errorhandler(Exception)
-def print_error(e):
-    print(request.headers, "\n", e)
-    return {"message": "Something went wrong"}, 500
+# TODO if time: use secondary table to only allow 1 upvote/downvote per user; if already upvoted/downvoted, remove vote
+@surges_bp.route("/upvote", methods=["POST"])
+def upvote():
+    surge_id = request.args.get("id")
+    surge = Post.query.filter_by(route_link=surge_id).first()
+    surge.upvote()
+
+    return jsonify(message="Success", upvotes=surge.upvotes)
+
+
+@surges_bp.route("/downvote", methods=["POST"])
+def downvote():
+    surge_id = request.args.get("id")
+    surge = Post.query.filter_by(route_link=surge_id).first()
+    surge.downvote()
+
+    return jsonify(message="Success", upvotes=surge.upvotes)

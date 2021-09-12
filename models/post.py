@@ -1,6 +1,30 @@
 from extensions import db
 from sqlalchemy.dialects.postgresql import ARRAY
 import shortuuid
+from nltk.stem.snowball import SnowballStemmer
+from nltk.tokenize import word_tokenize
+import string
+
+
+def stem_sentence(sentence, stemmer):
+    words = word_tokenize(sentence)
+    stemmed_words = [stemmer.stem(word) for word in words if word not in string.punctuation]
+    return " ".join(stemmed_words)
+
+
+# language stemmers - more support on the way
+english_stemmer = SnowballStemmer("english")
+french_stemmer = SnowballStemmer("french")
+german_stemmer = SnowballStemmer("german")
+spanish_stemmer = SnowballStemmer("spanish")
+
+
+stemmer_map = {
+    "en": english_stemmer,
+    "fr": french_stemmer,
+    "de": german_stemmer,
+    "es": spanish_stemmer
+}
 
 
 class Post(db.Model):
@@ -12,6 +36,7 @@ class Post(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     content = db.Column(db.String(200))
+    stemmed_content = db.Column(db.String(250))
     tags = db.Column(ARRAY(db.String(20)))
     language_code = db.Column(db.String(20))
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
@@ -26,21 +51,20 @@ class Post(db.Model):
         self.tags = tags
         self.language_code = language_code
         self.route_link = shortuuid.uuid()[:12]
+        self.stemmed_content = stem_sentence(self.content, stemmer_map[self.language_code])
 
-    def update_content(self, content):
-        self.content = content
-
-    def update_tags(self, tags):
-        self.tags = tags
-
-    def update_language(self, language):
-        self.language = language
-
-    def add_upvote(self):
+    def upvote(self):
         self.upvotes += 1
+        db.session.commit()
 
     def downvote(self):
         self.upvotes -= 1
+
+        # if reached critical mass of -5 downvotes, delete post
+        if self.upvotes <= -5:
+            db.session.delete(self)
+
+        db.session.commit()
 
     def add_comment(self, comment):
         self.comments.append(comment)
