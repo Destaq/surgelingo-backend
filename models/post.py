@@ -5,10 +5,13 @@ from nltk.stem.snowball import SnowballStemmer
 from nltk.tokenize import word_tokenize
 import string
 
+all_punc = string.punctuation
+all_punc += "€¿¡"  # more languages
+
 
 def stem_sentence(sentence, stemmer):
     words = word_tokenize(sentence)
-    stemmed_words = [stemmer.stem(word) for word in words if word not in string.punctuation]
+    stemmed_words = [stemmer.stem(word) for word in words if word not in all_punc]
     return " ".join(stemmed_words)
 
 

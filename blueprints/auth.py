@@ -73,3 +73,8 @@ def user():
         return jsonify(user=current_user.username)
     else:
         return jsonify(message="Not logged in"), 401
+
+@auth_bp.errorhandler(Exception)
+def print_error(e):
+    print(request.headers, "\n", e)
+    return {"message": "Something went wrong"}, 500

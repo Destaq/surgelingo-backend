@@ -1,6 +1,7 @@
 from extensions import db
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 upvoted_content_helper_table = db.Table(
     "upvoted_content_helper_table",
     db.Column("user_id", db.Integer, db.ForeignKey("users.id")),
@@ -22,6 +23,7 @@ class User(db.Model):
         backref="upvoters",
         lazy="dynamic",
     )
+    words = db.relationship("Word", backref="author", lazy="dynamic")
 
     def __init__(self, username, email, password):
         self.username = username
