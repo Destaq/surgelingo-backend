@@ -56,7 +56,7 @@ def create_app():
 
 
 
-    # cookie scheme auto-refresh
+    # cookie scheme auto-refresh, note that conflicts with nuxt-auth for the moment
     @app.after_request
     def refresh_expiring_jwts(response):
         try:

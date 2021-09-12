@@ -80,7 +80,7 @@ def print_error(e):
 #         count += 1
 #         print(f"{count * 100 /1000}%", end="\r")
 #         if len(row[2]) <= 200:
-#             new_surge_post = Post(row[2], admin_user.id, [], "es")
+#             new_surge_post = Post(row[2], admin_user.id, ["tatoeba"], "es")
 #             db.session.add(new_surge_post)
 #             db.session.commit()
 #     return jsonify({"message": "Content imported."})

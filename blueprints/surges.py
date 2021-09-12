@@ -6,6 +6,7 @@ from flask_jwt_extended import current_user, jwt_required
 from sqlalchemy.orm.state import InstanceState
 import collections
 from operator import itemgetter
+from random import shuffle
 
 
 surges_bp = Blueprint("surges", __name__)
@@ -93,6 +94,37 @@ def calculator(user_stems, content_stems):
     return number_overlapping_words / content_stem_length
 
 
+@surges_bp.route("/detailed-search", methods=["GET"])
+def search_surges():
+    author_username = request.args.get("username")
+    language_code = request.args.get("language_code")
+    tag = request.args.get("tag")
+    contents = request.args.get("contents")
+    query_config = []
+    query_config.append(language_code == language_code)
+
+    if request.args.get("alreadyShown"):
+        exclude_links = request.args.get("alreadyShown").split(",")
+    else:
+        exclude_links = []
+
+    if author_username != "null":
+        query_config.append(User.query.filter_by(username=author_username).first())
+    if tag != "null":
+        query_config.append(Post.tags.contains([tag]))
+    if contents != "null":
+        query_config.append(Post.content.contains(contents))
+
+
+    results = Post.query.filter(Post.route_link.notin_(exclude_links)).filter(*query_config).limit(10).all()
+    results = [convert_post_to_dict(result) for result in results]
+
+    for item in results:
+        item["author"] = User.query.filter_by(id=item["author_id"]).first().username
+
+    return jsonify(surges=results)
+
+
 @surges_bp.route("/return-personalized", methods=["GET"])
 @jwt_required()
 def return_personalized_surges():
@@ -128,6 +160,11 @@ def return_personalized_surges():
             show_dict[elem] = 0
 
     res = sorted(show_dict.items(), key=itemgetter(1), reverse=True)
+
+    # not random by default, retains input order, so shuffle if difficulty limit is zero
+    if difficulty_limit == 0:
+        shuffle(res)
+
     readable_res = [convert_post_to_dict(el[0]) for el in res[:20]]
     for item in readable_res:
         item["author"] = User.query.filter_by(id=item["author_id"]).first().username
@@ -137,7 +174,6 @@ def return_personalized_surges():
         known_or_not = []
         stemmed_content = element["stemmed_content"].split(" ")
         for word in stemmed_content:
-            print(word, user_known_stems)
             if word in user_known_stems:
                 # green highlight as known
                 known_or_not.append(True)
