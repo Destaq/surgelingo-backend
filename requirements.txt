@@ -1,11 +1,11 @@
-SQLAlchemy==1.4.23
-nltk==3.6.2
-alembic==1.7.1
 Flask_JWT_Extended==4.3.0
 Flask_Migrate==3.1.0
-Werkzeug==2.0.1
 Flask==2.0.1
+SQLAlchemy==1.4.23
 Flask_SQLAlchemy==2.5.1
+Werkzeug==2.0.1
 shortuuid==1.0.1
 Flask_Cors==3.0.10
+nltk==3.6.2
+alembic==1.7.1
 python-dotenv==0.19.0
