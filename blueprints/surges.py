@@ -7,6 +7,7 @@ from sqlalchemy.orm.state import InstanceState
 import collections
 from operator import itemgetter
 
+
 surges_bp = Blueprint("surges", __name__)
 
 
@@ -80,12 +81,12 @@ def calculator(user_stems, content_stems):
     """
     Returns the number of words a user knows in a stemmed content B.
     """
-    c_a=collections.Counter(user_stems)
-    c_b=collections.Counter(content_stems)
-    duplicates=[]
+    c_a = collections.Counter(user_stems)
+    c_b = collections.Counter(content_stems)
+    duplicates = []
     for c in c_a:
-        duplicates+=[c]*min(c_a[c],c_b[c])
-    
+        duplicates += [c] * min(c_a[c], c_b[c])
+
     number_overlapping_words = len(duplicates)
     content_stem_length = len(content_stems)
 
@@ -98,15 +99,57 @@ def return_personalized_surges():
     # returns top n surges based on % content known by user
     user_known_stems = [word.word for word in list(set(current_user.words))]
     desired_language_code = request.args.get("language_code")
-    returned_surges = Post.query.filter_by(language_code=desired_language_code).all()
+    if request.args.get("alreadyShown"):
+        exclude_links = request.args.get("alreadyShown").split(",")
+    else:
+        exclude_links = []
 
+    if request.args.get("difficulty"):
+        difficulty_limit = float(request.args.get("difficulty"))
+    else:
+        difficulty_limit = 0.8  # default of medium
+    returned_surges = (
+        Post.query.filter_by(language_code=desired_language_code)
+        .filter(Post.route_link.notin_(exclude_links))
+        .all()
+    )
 
     # TODO BUG NOTE - far from the best way to do this, especially with larger db sizes
-    # NOTE: sorted does not work
+    # NOTE: sorted does not work without this roundabout method
+    # need to learn some more SQL to do it properly
     show_dict = {}
     for elem in returned_surges:
-        show_dict[elem] = calculator(user_known_stems, elem.stemmed_content.split(" "))
-    
-    res = sorted(show_dict.items(), key=itemgetter(1), reverse=True)
+        if difficulty_limit != 0:
+            value = calculator(user_known_stems, elem.stemmed_content.split(" "))
+            if value >= difficulty_limit:
+                show_dict[elem] = value
+        else:
+            # just show randomly
+            show_dict[elem] = 0
 
-    return jsonify(surges=[convert_post_to_dict(el[0]) for el in res[:20]])
+    res = sorted(show_dict.items(), key=itemgetter(1), reverse=True)
+    readable_res = [convert_post_to_dict(el[0]) for el in res[:20]]
+    for item in readable_res:
+        item["author"] = User.query.filter_by(id=item["author_id"]).first().username
+
+    # TODO: create a highlighted value for the word
+    for element in readable_res:
+        known_or_not = []
+        stemmed_content = element["stemmed_content"].split(" ")
+        for word in stemmed_content:
+            print(word, user_known_stems)
+            if word in user_known_stems:
+                # green highlight as known
+                known_or_not.append(True)
+            else:
+                # red highlight as unknown
+                known_or_not.append(False)
+        element["knownLemmas"] = known_or_not
+
+    return jsonify(surges=readable_res)
+
+
+@surges_bp.errorhandler(Exception)
+def print_error(e):
+    print(request.headers, "\n", e)
+    return {"message": "Something went wrong"}, 500

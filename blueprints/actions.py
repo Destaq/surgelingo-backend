@@ -3,6 +3,27 @@ from extensions import db
 from models.user import User
 from models.word import Word
 from flask_jwt_extended import jwt_required, current_user
+import string
+from nltk.stem.snowball import SnowballStemmer
+
+
+# used to remove punctuation when clicked as Marked Known
+all_punc = string.punctuation
+all_punc += "€¿¡"  # more languages
+
+
+# language stemmers - more languages on the way
+english_stemmer = SnowballStemmer("english")
+french_stemmer = SnowballStemmer("french")
+german_stemmer = SnowballStemmer("german")
+spanish_stemmer = SnowballStemmer("spanish")
+stemmer_map = {
+    "en": english_stemmer,
+    "fr": french_stemmer,
+    "de": german_stemmer,
+    "es": spanish_stemmer,
+}
+
 
 
 actions_bp = Blueprint("actions", __name__)
@@ -15,8 +36,17 @@ def edit_user_wordbank():
     Edit the user's wordbank.
     """
     wordbank = request.json["wordbank"]
+    update_language_code = request.json["language_code"]
     wordbank = wordbank.splitlines()
     for word in wordbank:
+        # strip any lingering punctuation
+        for c in all_punc:
+            word = word.replace(c, "")
+
+        # generate lemma from word
+        stemmer = stemmer_map[update_language_code]
+        word = stemmer.stem(word)
+
         gen_word = Word(word, current_user.id)
 
         # link word to user
