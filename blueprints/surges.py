@@ -46,13 +46,30 @@ def create_surge_post():
 
 
 @surges_bp.route("/get", methods=["GET"])
+@jwt_required(optional=True)
 def get_surge():
     surge_id = request.args.get("id")
 
     surge = Post.query.filter_by(route_link=surge_id).first()
+    author = User.query.filter_by(id=surge.author_id).first().username,
+    surge = convert_post_to_dict(surge)
+
+    if current_user:
+        user_known_stems = [word.word for word in list(set(current_user.words))]
+        known_or_not = []
+        stemmed_content = surge["stemmed_content"].split(" ")
+        for word in stemmed_content:
+            if word in user_known_stems:
+                # green highlight as known
+                known_or_not.append(True)
+            else:
+                # red highlight as unknown
+                known_or_not.append(False)
+        surge["knownLemmas"] = known_or_not
+
     return jsonify(
-        surge=convert_post_to_dict(surge),
-        author=User.query.filter_by(id=surge.author_id).first().username,
+        surge=surge,
+        author=author[0]
     )
 
 
@@ -95,6 +112,7 @@ def calculator(user_stems, content_stems):
 
 
 @surges_bp.route("/detailed-search", methods=["GET"])
+@jwt_required(optional=True)
 def search_surges():
     author_username = request.args.get("username")
     language_code = request.args.get("language_code")
@@ -119,8 +137,26 @@ def search_surges():
     results = Post.query.filter(Post.route_link.notin_(exclude_links)).filter(*query_config).limit(10).all()
     results = [convert_post_to_dict(result) for result in results]
 
+    if current_user:
+        user_known_stems = [word.word for word in list(set(current_user.words))]
+    else:
+        user_known_stems = []
+
     for item in results:
         item["author"] = User.query.filter_by(id=item["author_id"]).first().username
+        known_or_not = []
+
+        # highlightable
+        if current_user:
+            stemmed_content = item["stemmed_content"].split(" ")
+            for word in stemmed_content:
+                if word in user_known_stems:
+                    # green highlight as known
+                    known_or_not.append(True)
+                else:
+                    # red highlight as unknown
+                    known_or_not.append(False)
+            item["knownLemmas"] = known_or_not
 
     return jsonify(surges=results)
 
@@ -169,7 +205,7 @@ def return_personalized_surges():
     for item in readable_res:
         item["author"] = User.query.filter_by(id=item["author_id"]).first().username
 
-    # TODO: create a highlighted value for the word
+    # Create a highlighted value for the word
     for element in readable_res:
         known_or_not = []
         stemmed_content = element["stemmed_content"].split(" ")
