@@ -16,7 +16,6 @@ def edit_user_wordbank():
     """
     wordbank = request.json["wordbank"]
     wordbank = wordbank.splitlines()
-    print(wordbank)
     for word in wordbank:
         gen_word = Word(word, current_user.id)
 
