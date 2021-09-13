@@ -1,5 +1,7 @@
 # surgelingo-backend
-This is the backend of my submission for the 48-hour Develop to Disrupt 2021 hackathon, built with Python + Flask. You can view the frontend [here](https://develop-to-disrupt.devpost.com/).
+This is the backend of my solo submission for the 48-hour Develop to [Disrupt 2021 hackathon](https://develop-to-disrupt.devpost.com/), my first hackathon, built with Python + Flask. You can view the frontend [here](https://develop-to-disrupt.devpost.com/).
+
+**Update 13/9:** I won one of the five main prizes :tada:, from nearly 100 participants! This project earned me the **Best Solo Hack** award, a pair of Beats headphones, tickets to [Canada's Innovation Summit](https://www.corridorsummit.ca/), and a year of Wolfram|One Pro. Thanks to everyone who made this possible and the support given along the way!
 
 ## About SurgeLingo
 _SurgeLingo_ addresses a fundamental issue that many language learners, especially beginner and intermediate ones, face: lack of comprehensible content. "Comprehensible content" is any form of audiovisual media that they can understand.

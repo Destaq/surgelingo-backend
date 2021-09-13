@@ -126,7 +126,11 @@ def search_surges():
         exclude_links = []
 
     if author_username != "null":
-        query_config.append(User.query.filter_by(username=author_username).first())
+        # get user from username
+        author_user = User.query.filter_by(username=author_username).first()
+        # get ID from user
+        author_user_id = author_user.id
+        query_config.append(author_user_id == Post.author_id)
     if tag != "null":
         query_config.append(Post.tags.contains([tag]))
     if contents != "null":
